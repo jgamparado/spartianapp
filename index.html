@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Spartiate App</title>
+<meta name="description" content="Votre recette personnalisée au concombre, vos recettes bonus et votre plan de 21 jours.">
+<meta name="theme-color" content="#0a0807">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Spartiate">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0807; --bg2:#14100d; --card:#1a1411; --card2:#221a15; --line:#3a2c20;
+  --gold:#d9ad55; --gold2:#f3d27e; --gold3:#a8782c;
+  --red:#c0281f; --red2:#e0453a;
+  --text:#f4ece0; --muted:#b5a690; --dim:#7d705f;
+  --goldgrad:linear-gradient(135deg,#f6dc8c 0%,#d9ad55 45%,#a8782c 100%);
+  --radius:16px;
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text)}
+body{font-family:Inter,system-ui,-apple-system,sans-serif;font-size:16px;line-height:1.55;min-height:100vh;
+  background:radial-gradient(120% 60% at 50% -10%,rgba(192,40,31,.22),transparent 60%),var(--bg);background-attachment:fixed}
+h1,h2,h3,.cinzel{font-family:Cinzel,Georgia,serif;letter-spacing:.02em;line-height:1.2;margin:0}
+h1{font-size:1.7rem} h2{font-size:1.35rem} h3{font-size:1.08rem}
+.gold{background:var(--goldgrad);-webkit-background-clip:text;background-clip:text;color:transparent}
+p{margin:.5em 0}
+button,input,select{font:inherit;color:inherit}
+.app{max-width:560px;margin:0 auto;padding:16px 16px calc(96px + var(--safe-b))}
+.view{display:none;animation:fade .35s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* header */
+.top{display:flex;align-items:center;gap:12px;padding:6px 0 18px}
+.top img{width:44px;height:44px;border-radius:12px;border:1px solid var(--gold3)}
+.top .t1{font-family:Cinzel,serif;font-weight:800;font-size:1.05rem;letter-spacing:.08em}
+.top .t2{font-size:.78rem;color:var(--muted)}
+
+/* cards */
+.card{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin:0 0 14px}
+.card.gold-b{border-color:var(--gold3);box-shadow:0 0 0 1px rgba(217,173,85,.12),0 12px 40px -18px rgba(217,173,85,.35)}
+.kicker{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:6px}
+.muted{color:var(--muted)} .small{font-size:.86rem}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--gold3),transparent);margin:18px 0;border:0}
+
+/* hero */
+.hero{text-align:center;padding:4px 0 8px}
+.hero img{width:min(68vw,260px);aspect-ratio:1;border-radius:24px;border:1px solid var(--gold3);box-shadow:0 20px 60px -20px rgba(192,40,31,.6)}
+.hero h1{margin-top:16px}
+.hero p{color:var(--muted);max-width:420px;margin:8px auto 0}
+
+/* buttons */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:14px;padding:15px 18px;font-weight:700;cursor:pointer;font-size:1rem;transition:transform .12s,filter .2s}
+.btn:active{transform:scale(.98)}
+.btn-gold{background:var(--goldgrad);color:#1c1206;box-shadow:0 10px 30px -12px rgba(217,173,85,.7)}
+.btn-red{background:linear-gradient(135deg,var(--red2),var(--red));color:#fff}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+.btn[disabled]{filter:grayscale(.6) brightness(.7);cursor:default}
+
+/* quick grid */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;text-align:left;width:100%}
+.tile .ic{font-size:1.4rem}
+.tile b{display:block;margin-top:6px;font-size:.95rem}
+.tile span{font-size:.8rem;color:var(--muted)}
+
+/* form */
+.field{margin-bottom:14px}
+.field label{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-bottom:6px}
+.field label b{color:var(--gold2);font-weight:700}
+.inp{width:100%;background:#0f0b09;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:1.1rem;outline:none}
+.inp:focus{border-color:var(--gold)}
+input[type=range]{width:100%;accent-color:var(--gold);height:28px}
+.err{color:var(--red2);font-size:.85rem;min-height:1.2em}
+
+/* loader */
+.loader{text-align:center;padding:40px 10px}
+.ring{width:84px;height:84px;margin:0 auto 18px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--gold);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.steps{list-style:none;padding:0;margin:0;font-size:.92rem;color:var(--dim)}
+.steps li{padding:4px 0;transition:color .3s}
+.steps li.on{color:var(--gold2)}
+
+/* recipe */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.stat{background:#0f0b09;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.stat b{display:block;font-size:1.15rem;color:var(--gold2)}
+.stat span{font-size:.72rem;color:var(--muted)}
+.ing{list-style:none;padding:0;margin:10px 0}
+.ing li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed var(--line)}
+.ing li:last-child{border-bottom:0}
+.ing .q{font-weight:700;color:var(--gold2);white-space:nowrap}
+.ol{padding-left:0;list-style:none;counter-reset:s;margin:8px 0}
+.ol li{counter-increment:s;position:relative;padding:8px 0 8px 40px}
+.ol li::before{content:counter(s);position:absolute;left:0;top:7px;width:28px;height:28px;border-radius:50%;background:var(--goldgrad);color:#1c1206;font-weight:800;font-size:.85rem;display:grid;place-items:center}
+.tip{background:rgba(192,40,31,.1);border-left:3px solid var(--red);border-radius:10px;padding:12px 14px;margin:10px 0;font-size:.92rem}
+.tip.g{background:rgba(217,173,85,.08);border-left-color:var(--gold)}
+
+/* list items (bonus / modules) */
+.item{display:flex;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;width:100%;text-align:left}
+.item .em{font-size:1.6rem;width:46px;height:46px;flex:none;display:grid;place-items:center;background:#0f0b09;border:1px solid var(--line);border-radius:12px}
+.item b{display:block;font-size:.98rem}
+.item span{font-size:.82rem;color:var(--muted)}
+.item .chev{margin-left:auto;color:var(--gold);font-size:1.2rem}
+.tag{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:rgba(192,40,31,.18);color:var(--red2);margin-bottom:4px}
+
+/* sheet */
+.sheet{position:fixed;inset:0;z-index:50;display:none}
+.sheet.open{display:block}
+.sheet .bd{position:absolute;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(3px)}
+.sheet .pn{position:absolute;left:0;right:0;bottom:0;max-height:90vh;overflow:auto;background:var(--bg2);border-top:1px solid var(--gold3);border-radius:22px 22px 0 0;padding:10px 18px calc(28px + var(--safe-b));max-width:560px;margin:0 auto;animation:up .3s ease}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.grab{width:44px;height:5px;border-radius:9px;background:var(--line);margin:6px auto 14px}
+.close{position:sticky;top:0;float:right;background:var(--card);border:1px solid var(--line);border-radius:50%;width:36px;height:36px;cursor:pointer;color:var(--gold)}
+.pn h4{font-family:Cinzel,serif;color:var(--gold2);margin:18px 0 6px;font-size:1rem}
+.pn ul{padding-left:20px;margin:6px 0} .pn li{margin:4px 0}
+
+/* plan */
+.prog{height:10px;background:#0f0b09;border:1px solid var(--line);border-radius:99px;overflow:hidden;margin:10px 0}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--gold));width:0;transition:width .4s}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:12px 0}
+.day{aspect-ratio:1;border-radius:10px;border:1px solid var(--line);background:#0f0b09;display:grid;place-items:center;font-weight:700;font-size:.85rem;cursor:pointer;color:var(--muted)}
+.day.done{background:var(--goldgrad);color:#1c1206;border-color:transparent}
+.day.sel{outline:2px solid var(--red2);outline-offset:1px}
+.check{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px dashed var(--line);cursor:pointer}
+.check:last-child{border-bottom:0}
+.check input{appearance:none;width:24px;height:24px;flex:none;border:2px solid var(--gold3);border-radius:7px;margin:1px 0 0;display:grid;place-items:center;cursor:pointer}
+.check input:checked{background:var(--goldgrad);border-color:transparent}
+.check input:checked::after{content:"✓";color:#1c1206;font-weight:900;font-size:.9rem}
+.check small{display:block;color:var(--muted)}
+
+/* kegel timer */
+.timer{text-align:center;padding:10px 0}
+.orb{width:150px;height:150px;margin:8px auto 14px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--gold3);background:radial-gradient(circle,rgba(217,173,85,.18),transparent 70%);transition:transform 1s ease,border-color .3s}
+.orb.c{transform:scale(.82);border-color:var(--red2);background:radial-gradient(circle,rgba(192,40,31,.3),transparent 70%)}
+.orb b{font-family:Cinzel,serif;font-size:2.4rem;color:var(--gold2)}
+.orb span{display:block;font-size:.8rem;color:var(--muted);margin-top:-6px}
+
+/* nav */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(10,8,7,.94);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:6px 6px calc(6px + var(--safe-b))}
+.nav .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+.nav button{background:none;border:0;padding:6px 2px;cursor:pointer;color:var(--dim);font-size:.66rem;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px}
+.nav button .i{font-size:1.25rem;filter:grayscale(1) opacity(.7)}
+.nav button.on{color:var(--gold2)}
+.nav button.on .i{filter:none}
+.disc{font-size:.76rem;color:var(--dim);text-align:center;margin-top:18px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="top">
+    <img src="logo.jpg" alt="">
+    <div><div class="t1 gold">SPARTIATE APP</div><div class="t2" id="hello">Bienvenue, guerrier.</div></div>
+  </div>
+
+  <!-- ACCUEIL -->
+  <section class="view active" id="v-home">
+    <div class="hero">
+      <img src="logo.jpg" alt="Spartiate App">
+      <h1 class="gold">Ton protocole commence ici</h1>
+      <p>Ta recette au concombre calculée pour ton corps, 6 recettes bonus, les techniques de plaisir et ton plan de 21 jours.</p>
+    </div>
+    <div style="margin:18px 0 14px"><button class="btn btn-gold" data-go="recipe">⚔️ Générer ma recette personnalisée</button></div>
+
+    <div class="card gold-b" id="home-progress" hidden>
+      <div class="kicker">Ta progression</div>
+      <h3>Jour <span id="hp-day">1</span> sur 21</h3>
+      <div class="prog"><i id="hp-bar"></i></div>
+      <button class="btn btn-ghost" data-go="plan">Ouvrir mon plan du jour →</button>
+    </div>
+
+    <div class="grid2">
+      <button class="tile" data-go="recipe"><div class="ic">🥒</div><b>Ma recette</b><span>Dosée selon âge, taille, poids</span></button>
+      <button class="tile" data-go="bonus"><div class="ic">🍷</div><b>Recettes bonus</b><span>6 boissons naturelles</span></button>
+      <button class="tile" data-go="tech"><div class="ic">🔥</div><b>Techniques</b><span>6 modules de plaisir</span></button>
+      <button class="tile" data-go="plan"><div class="ic">🛡️</div><b>Plan 21 jours</b><span>Rituel quotidien + pelvien</span></button>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="kicker">Comment utiliser l'app</div>
+      <ol class="ol">
+        <li>Génère ta recette avec ton âge, ta taille et ton poids.</li>
+        <li>Bois ton tonique chaque matin au réveil, à jeun.</li>
+        <li>Coche ton rituel du jour dans le plan de 21 jours.</li>
+        <li>Lis un module de technique par semaine, et mets-le en pratique.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- RECETTE -->
+  <section class="view" id="v-recipe">
+    <div id="r-form">
+      <div class="kicker">Le truc du concombre</div>
+      <h2 class="gold">Ta recette sur mesure</h2>
+      <p class="muted small">Entre tes informations. L'app calcule les quantités adaptées à ton corps en quelques secondes.</p>
+      <div class="card" style="margin-top:14px">
+        <div class="field"><label for="age">Âge <b id="age-o">45 ans</b></label><input type="range" id="age" min="18" max="90" value="45"></div>
+        <div class="field"><label for="h">Taille <b id="h-o">175 cm</b></label><input type="range" id="h" min="145" max="210" value="175"></div>
+        <div class="field"><label for="w">Poids <b id="w-o">80 kg</b></label><input type="range" id="w" min="45" max="160" value="80"></div>
+        <button class="btn btn-gold" id="gen">⚔️ Générer ma recette</button>
+      </div>
+    </div>
+
+    <div id="r-load" class="loader" hidden>
+      <div class="ring"></div>
+      <h3 class="gold">Calcul en cours…</h3>
+      <ul class="steps" id="lsteps">
+        <li>Analyse de ton profil</li>
+        <li>Calcul de ton indice corporel</li>
+        <li>Ajustement des quantités</li>
+        <li>Préparation de ta recette</li>
+      </ul>
+    </div>
+
+    <div id="r-out" hidden></div>
+  </section>
+
+  <!-- BONUS -->
+  <section class="view" id="v-bonus">
+    <div class="kicker">Débloqué avec ton accès</div>
+    <h2 class="gold">Recettes bonus</h2>
+    <p class="muted small">Six boissons naturelles à alterner avec ton tonique au concombre. Ingrédients de supermarché, moins de 10 € au total.</p>
+    <div id="bonus-list" style="margin-top:14px"></div>
+  </section>
+
+  <!-- TECHNIQUES -->
+  <section class="view" id="v-tech">
+    <div class="kicker">Contenu réservé</div>
+    <h2 class="gold">Les techniques du plaisir</h2>
+    <p class="muted small">Ce que très peu d'hommes apprennent. Lis un module, applique-le, observe sa réaction.</p>
+    <div id="tech-list" style="margin-top:14px"></div>
+  </section>
+
+  <!-- PLAN -->
+  <section class="view" id="v-plan">
+    <div class="kicker">Rituel spartiate</div>
+    <h2 class="gold">Plan de 21 jours</h2>
+    <div class="card gold-b" style="margin-top:14px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <h3>Jour <span id="p-day">1</span></h3><span class="small muted"><span id="p-count">0</span>/21 jours validés</span>
+      </div>
+      <div class="prog"><i id="p-bar"></i></div>
+      <div class="days" id="days"></div>
+      <div id="p-phase" class="tip g small"></div>
+      <div id="checks"></div>
+    </div>
+
+    <div class="card">
+      <div class="kicker">Entraînement pelvien guidé</div>
+      <h3>Le muscle de la fermeté</h3>
+      <p class="small muted">Le plancher pelvien (le muscle qui retient l'urine) aide à maintenir l'érection et à contrôler l'éjaculation. Contracte-le, sans serrer les fesses ni retenir ton souffle.</p>
+      <div class="timer">
+        <div class="orb" id="orb"><div><b id="orb-n">5</b><span id="orb-t">Prêt</span></div></div>
+        <div class="small muted" id="orb-rep">Série : 10 répétitions · 5 s contraction / 5 s relâchement</div>
+        <div style="margin-top:12px"><button class="btn btn-red" id="kegel">▶ Démarrer la série</button></div>
+      </div>
+    </div>
+  </section>
+
+  <p class="disc">Spartiate App propose des recettes alimentaires et des conseils de bien-être. Il ne remplace pas un avis médical. Des troubles de l'érection persistants peuvent signaler un problème cardiovasculaire ou hormonal : parles-en à un médecin et n'arrête jamais un traitement sans son accord.</p>
+</div>
+
+<!-- sheet -->
+<div class="sheet" id="sheet" aria-hidden="true">
+  <div class="bd" data-close></div>
+  <div class="pn" role="dialog" aria-modal="true">
+    <button class="close" data-close aria-label="Fermer">✕</button>
+    <div class="grab"></div>
+    <div id="sheet-c"></div>
+  </div>
+</div>
+
+<nav class="nav"><div class="in">
+  <button data-go="home" class="on"><span class="i">🏛️</span>Accueil</button>
+  <button data-go="recipe"><span class="i">🥒</span>Recette</button>
+  <button data-go="bonus"><span class="i">🍷</span>Bonus</button>
+  <button data-go="tech"><span class="i">🔥</span>Techniques</button>
+  <button data-go="plan"><span class="i">🛡️</span>21 jours</button>
+</div></nav>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={
+  get(k,d){try{const v=localStorage.getItem('sp_'+k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem('sp_'+k,JSON.stringify(v))}catch(e){}}
+};
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const r5=v=>Math.round(v/5)*5, r10=v=>Math.round(v/10)*10;
+
+/* ---------- navigation ---------- */
+function go(v){
+  $$('.view').forEach(x=>x.classList.toggle('active',x.id==='v-'+v));
+  $$('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.go===v));
+  window.scrollTo({top:0,behavior:'smooth'});
+  try{history.replaceState(null,'','#'+v)}catch(e){}
+  if(v==='plan')renderPlan();
+  if(v==='home')renderHome();
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b){e.preventDefault();go(b.dataset.go)}});
+
+/* ---------- sheet ---------- */
+function openSheet(html){$('#sheet-c').innerHTML=html;$('#sheet').classList.add('open');$('#sheet').setAttribute('aria-hidden','false');document.body.style.overflow='hidden';$('.sheet .pn').scrollTop=0}
+function closeSheet(){$('#sheet').classList.remove('open');$('#sheet').setAttribute('aria-hidden','true');document.body.style.overflow=''}
+$$('[data-close]').forEach(x=>x.addEventListener('click',closeSheet));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+
+/* ---------- recipe calculator ---------- */
+const age=$('#age'),h=$('#h'),w=$('#w');
+function syncOut(){$('#age-o').textContent=age.value+' ans';$('#h-o').textContent=h.value+' cm';$('#w-o').textContent=w.value+' kg'}
+[age,h,w].forEach(i=>i.addEventListener('input',syncOut));
+const prof=store.get('profile',null);
+if(prof){age.value=prof.age;h.value=prof.h;w.value=prof.w}
+syncOut();
+
+function calc(A,H,W){
+  const bmi=W/Math.pow(H/100,2);
+  return {
+    bmi:bmi,
+    water:r10(clamp(120+W*1.6,200,350)),
+    cucumber:r5(clamp(W*2,120,260)),
+    rocket:r5(clamp(20+(A>=50?10:0)+(W>=90?5:0),20,40)),
+    ginger:A>=65?3:(A>=45?5:6),
+    lemon:W>=95?'¾ citron':'½ citron',
+    lemonMl:W>=95?30:20,
+    mint:W>=90?8:6,
+    hydra:r10(W*33)/1000
+  };
+}
+function bmiLabel(b){return b<18.5?'Maigreur':b<25?'Normal':b<30?'Surpoids':'Obésité'}
+
+function recipeHTML(A,H,W,c){
+  const tips=[];
+  if(c.bmi>=27)tips.push('<div class="tip"><b>Ton levier n°1 :</b> perdre 5 à 10 % de ton poids améliore souvent nettement la fermeté. Associe ta recette à 30 minutes de marche rapide par jour.</div>');
+  if(A>=50)tips.push('<div class="tip"><b>Après 50 ans :</b> fais contrôler ta tension, ta glycémie et ton cholestérol une fois par an. Une bonne circulation, c\'est une bonne érection.</div>');
+  if(A<35)tips.push('<div class="tip g"><b>Chez les plus jeunes,</b> le stress et le manque de sommeil pèsent souvent plus que le corps lui-même. Vise 7 h de sommeil.</div>');
+  return `
+  <div class="kicker">Recette générée pour toi</div>
+  <h2 class="gold">Le Tonique Spartiate au concombre</h2>
+  <div class="stats">
+    <div class="stat"><b>${A}</b><span>ans</span></div>
+    <div class="stat"><b>${H}</b><span>cm</span></div>
+    <div class="stat"><b>${W}</b><span>kg</span></div>
+  </div>
+  <div class="card gold-b">
+    <h3>Ingrédients · 1 dose</h3>
+    <ul class="ing">
+      <li><span>🥒 Concombre frais, avec la peau</span><span class="q">${c.cucumber} g</span></li>
+      <li><span>🌿 Roquette (ou épinards frais)</span><span class="q">${c.rocket} g</span></li>
+      <li><span>🫚 Gingembre frais, pelé</span><span class="q">${c.ginger} g</span></li>
+      <li><span>🍋 Citron, jus pressé</span><span class="q">${c.lemon} · ${c.lemonMl} ml</span></li>
+      <li><span>🌱 Feuilles de menthe</span><span class="q">${c.mint} feuilles</span></li>
+      <li><span>💧 Eau froide</span><span class="q">${c.water} ml</span></li>
+    </ul>
+    <p class="small muted">Astuce : pèse le concombre et le gingembre sur une balance de cuisine la première fois, ensuite tu le feras à l'œil.</p>
+  </div>
+  <div class="card">
+    <h3>Préparation · 2 minutes</h3>
+    <ol class="ol">
+      <li>Lave bien le concombre (bio si possible) et coupe-le en morceaux, <b>avec la peau</b> : c'est elle qui concentre les polyphénols.</li>
+      <li>Mets dans le blender le concombre, la roquette, le gingembre, la menthe et l'eau.</li>
+      <li>Mixe 30 à 40 secondes jusqu'à obtenir un liquide homogène.</li>
+      <li>Ajoute le jus de citron à la fin et mélange. Ne filtre pas : garde les fibres.</li>
+      <li>Bois immédiatement, dans les 15 minutes, pour garder toute la fraîcheur.</li>
+    </ol>
+  </div>
+  <div class="card">
+    <h3>Quand le boire</h3>
+    <p>Chaque matin, <b>au réveil, à jeun</b>, 20 à 30 minutes avant ton petit-déjeuner. Tous les jours pendant 21 jours, puis garde-le dans ta routine.</p>
+    <div class="tip g small">Pourquoi ces ingrédients ? La roquette et les feuilles vertes apportent des <b>nitrates naturels</b>, que le corps transforme en oxyde nitrique, qui aide les vaisseaux à se dilater. Le concombre hydrate et apporte des polyphénols, le gingembre et le citron soutiennent la circulation et la digestion.</div>
+  </div>
+  <div class="card">
+    <h3>Ton profil</h3>
+    <div class="stats">
+      <div class="stat"><b>${c.bmi.toFixed(1)}</b><span>IMC · ${bmiLabel(c.bmi)}</span></div>
+      <div class="stat"><b>${c.hydra.toFixed(1)} L</b><span>eau / jour</span></div>
+      <div class="stat"><b>21</b><span>jours</span></div>
+    </div>
+    ${tips.join('')}
+    <p class="small muted">Précautions : si tu prends un anticoagulant (les feuilles vertes et le gingembre peuvent interagir) ou si tu as des calculs rénaux, demande l'avis de ton médecin avant de commencer.</p>
+  </div>
+  <button class="btn btn-gold" data-go="plan">🛡️ Commencer mon plan de 21 jours</button>
+  <div style="height:10px"></div>
+  <button class="btn btn-ghost" id="redo">Recalculer ma recette</button>`;
+}
+
+function showRecipe(p){
+  $('#r-form').hidden=true;$('#r-load').hidden=true;
+  const o=$('#r-out');o.hidden=false;o.innerHTML=recipeHTML(p.age,p.h,p.w,calc(p.age,p.h,p.w));
+  $('#redo').addEventListener('click',()=>{o.hidden=true;$('#r-form').hidden=false;window.scrollTo({top:0})});
+}
+
+$('#gen').addEventListener('click',()=>{
+  const p={age:+age.value,h:+h.value,w:+w.value};
+  store.set('profile',p);
+  $('#r-form').hidden=true;$('#r-load').hidden=false;
+  const li=$$('#lsteps li');li.forEach(x=>x.classList.remove('on'));
+  li.forEach((x,i)=>setTimeout(()=>x.classList.add('on'),450*(i+1)));
+  setTimeout(()=>{showRecipe(p);window.scrollTo({top:0});renderHello()},2400);
+});
+if(prof)showRecipe(prof);
+
+/* ---------- bonus recipes ---------- */
+const BONUS=[
+ {em:'🧂',t:'Le tonique minéral au sel bleu',s:'Le rituel minéral du matin',
+  why:'Une boisson d\'électrolytes pour bien t\'hydrater et commencer la journée avec énergie. Version volontairement pauvre en sel.',
+  ing:['250 ml d\'eau tiède','1 petite pincée (0,5 g) de sel de mer non raffiné','Le jus d\'½ citron vert','1 c. à café de miel','½ c. à café de poudre d\'açaï (baie d\'Amazonie)'],
+  prep:['Dissous le sel et le miel dans l\'eau tiède.','Ajoute le citron vert et l\'açaï, mélange bien.','Bois en 2 ou 3 gorgées, après ton tonique au concombre ou avant le sport.'],
+  warn:'Hypertension, problème cardiaque ou rénal : supprime complètement le sel.'},
+ {em:'🍉',t:'Le mélange à la pastèque',s:'2 ingrédients, riche en citrulline',
+  why:'La pastèque est l\'une des meilleures sources de citrulline, un acide aminé que le corps transforme en arginine puis en oxyde nitrique, utile à la circulation.',
+  ing:['300 g de pastèque, avec un peu de blanc près de l\'écorce (le plus riche en citrulline)','Le jus d\'1 citron vert','Quelques glaçons (optionnel)'],
+  prep:['Coupe la pastèque en cubes, garde un peu du blanc.','Mixe avec le citron vert 20 secondes.','Bois 1 à 2 heures avant un moment intime, ou en après-midi.'],
+  warn:'Diabète : la pastèque est sucrée, limite-toi à 200 g.'},
+ {em:'🥕',t:'La carotte ancestrale',s:'Pour tes yeux et ta peau',
+  why:'Riche en bêta-carotène (provitamine A), qui contribue au maintien d\'une vision normale, surtout en lumière faible.',
+  ing:['2 carottes moyennes (200 g)','1 orange pressée','1 c. à café d\'huile d\'olive','1 pincée de curcuma'],
+  prep:['Mixe les carottes avec le jus d\'orange et 100 ml d\'eau.','Ajoute l\'huile d\'olive : elle aide le corps à absorber le bêta-carotène.','Bois 3 à 4 fois par semaine.'],
+  warn:''},
+ {em:'🫚',t:'Le composé anti-inflammatoire',s:'Lait doré pour les articulations',
+  why:'Le curcuma et le gingembre sont étudiés pour leurs propriétés anti-inflammatoires. Le poivre noir multiplie l\'absorption du curcuma.',
+  ing:['250 ml de lait (ou boisson végétale)','1 c. à café de curcuma en poudre','1 cm de gingembre frais râpé','1 pincée de poivre noir','½ c. à café de cannelle, miel au goût'],
+  prep:['Chauffe le lait sans le faire bouillir.','Ajoute toutes les épices, fouette 1 minute.','Laisse infuser 3 minutes, bois chaud le soir.'],
+  warn:'Anticoagulants ou calculs biliaires : demande l\'avis de ton médecin.'},
+ {em:'🍠',t:'Le smoothie à la betterave',s:'Le booster de circulation',
+  why:'La betterave est la championne des nitrates naturels. Des études chez les sportifs montrent qu\'elle améliore le flux sanguin et l\'endurance.',
+  ing:['1 betterave cuite (150 g)','1 poignée de fruits rouges (surgelés ok)','½ banane','200 ml d\'eau ou de lait végétal'],
+  prep:['Mixe tout 40 secondes.','Bois 2 à 3 heures avant ton sport ou ta soirée.','Normal : urine ou selles roses le lendemain, c\'est la betterave.'],
+  warn:'Calculs rénaux : limite la betterave à 2 fois par semaine.'},
+ {em:'🍇',t:'Le jus du fruit violet',s:'Grenade et raisin noir pour l\'endurance',
+  why:'La grenade et le raisin noir sont parmi les fruits les plus riches en polyphénols antioxydants, qui protègent les vaisseaux sanguins.',
+  ing:['Les grains d\'1 grenade (ou 150 ml de jus 100 % pur)','1 poignée de raisin noir','1 poignée de myrtilles','100 ml d\'eau'],
+  prep:['Mixe tout et filtre si tu préfères sans pépins.','Bois un verre l\'après-midi, 4 à 5 fois par semaine.'],
+  warn:'Certains médicaments (statines, anticoagulants) interagissent avec la grenade : vérifie avec ton pharmacien.'}
+];
+$('#bonus-list').innerHTML=BONUS.map((b,i)=>`<button class="item" data-b="${i}"><div class="em">${b.em}</div><div><b>${b.t}</b><span>${b.s}</span></div><div class="chev">›</div></button>`).join('');
+$('#bonus-list').addEventListener('click',e=>{const it=e.target.closest('[data-b]');if(!it)return;const b=BONUS[+it.dataset.b];
+  openSheet(`<div class="kicker">Recette bonus</div><h2 class="gold">${b.em} ${b.t}</h2><p class="muted">${b.why}</p>
+  <h4>Ingrédients</h4><ul>${b.ing.map(x=>`<li>${x}</li>`).join('')}</ul>
+  <h4>Préparation</h4><ol class="ol">${b.prep.map(x=>`<li>${x}</li>`).join('')}</ol>
+  ${b.warn?`<div class="tip small">⚠️ ${b.warn}</div>`:''}`)});
+
+/* ---------- techniques ---------- */
+const TECH=[
+ {em:'✋',tag:'Module 1',t:'Les 7 mouvements',s:'La séquence manuelle qu\'utilisent les femmes entre elles',
+  body:`<p>Les femmes qui aiment les femmes connaissent un secret simple : le plaisir féminin se construit <b>lentement, à l'extérieur d'abord</b>, avec de la régularité. Voici la séquence, à suivre dans l'ordre. Compte 15 à 20 minutes, pas 3.</p>
+  <h4>Avant de commencer</h4><ul><li>Ongles courts et limés, mains propres et chaudes.</li><li>Du lubrifiant à base d'eau à portée de main. Il change tout.</li><li>Demande-lui de te guider : « plus doux ? plus vite ? ». Elle adorera qu'on lui pose la question.</li></ul>
+  <h4>La séquence</h4><ol class="ol">
+  <li><b>L'approche.</b> Caresse l'intérieur des cuisses, le bas du ventre, sans toucher le sexe. Fais monter l'attente 2 à 3 minutes.</li>
+  <li><b>La paume posée.</b> Pose toute ta main à plat sur son pubis, immobile, puis applique une légère pression rythmée. Elle s'habitue à ta main.</li>
+  <li><b>Les lèvres.</b> Du bout de deux doigts lubrifiés, caresse les lèvres extérieures de haut en bas, très lentement.</li>
+  <li><b>Les cercles.</b> Autour du clitoris, pas dessus : petits cercles avec la pulpe de l'index et du majeur. La plupart des femmes préfèrent cette stimulation indirecte.</li>
+  <li><b>Le rythme constant.</b> Quand sa respiration s'accélère, trouve un mouvement qu'elle aime et <b>ne change plus rien</b>. C'est l'erreur n°1 des hommes : accélérer ou changer au moment où ça marche.</li>
+  <li><b>Le geste « viens ici ».</b> Si elle le souhaite, insère un ou deux doigts paume vers le haut, et fais un mouvement de crochet vers toi, contre la paroi avant, tout en continuant les cercles avec l'autre main ou le pouce.</li>
+  <li><b>L'atterrissage.</b> Après l'orgasme, la zone devient très sensible. Ralentis, pose la main à plat, immobile, et reste contre elle.</li></ol>
+  <div class="tip g small">Chaque femme est différente. Ce qui compte n'est pas la technique parfaite, c'est d'observer ses réactions (souffle, bassin, sons) et de t'y adapter.</div>`},
+ {em:'⏱️',tag:'Module 2',t:'L\'erreur silencieuse',s:'Pourquoi elle souhaite parfois que tu finisses vite',
+  body:`<p>La plupart des femmes ont besoin de <b>15 à 20 minutes d'excitation</b> pour être pleinement prêtes. La plupart des hommes passent à la pénétration après 3 à 5 minutes. Résultat : elle n'est pas assez excitée, la pénétration est moins agréable, voire inconfortable, et elle attend que ça se termine.</p>
+  <h4>La correction</h4><ul><li><b>Inverse l'ordre :</b> fais-la jouir d'abord, avec tes mains ou ta bouche. La pénétration vient ensuite, comme un bonus.</li><li><b>Ne te précipite pas</b> vers les zones génitales : le cou, les oreilles, le dos, les cuisses comptent énormément.</li><li><b>Bonus pour toi :</b> en enlevant la pression de la performance, tes érections deviennent plus fiables. L'anxiété est l'ennemie n°1 de la fermeté.</li></ul>`},
+ {em:'🤝',tag:'Module 3',t:'Le toucher magique',s:'La préparer des heures avant d\'arriver à la maison',
+  body:`<p>Pour beaucoup de femmes, le désir commence dans la tête, bien avant la chambre. Le « préliminaire » commence le matin.</p>
+  <h4>En public, discrètement</h4><ul><li>La main posée dans le bas de son dos quand vous marchez.</li><li>Tes doigts qui effleurent l'intérieur de son poignet, à table.</li><li>Un regard soutenu de trois secondes, puis un sourire, sans rien dire.</li><li>Une phrase à l'oreille : « J'ai hâte d'être seul avec toi. »</li></ul>
+  <h4>Pendant la journée</h4><ul><li>Un message à midi qui lui dit ce que tu as aimé la dernière fois.</li><li>Un compliment précis, pas générique : « Cette robe, sur toi… ».</li></ul>
+  <div class="tip g small">Règle d'or : l'intention, c'est de lui faire plaisir, pas d'insister. Si elle n'est pas d'humeur, respecte-le, ça la rendra d'autant plus réceptive la prochaine fois.</div>`},
+ {em:'👅',tag:'Module 4',t:'La technique orale des pros',s:'Celle qui la fait supplier',
+  body:`<h4>La base</h4><ul><li><b>Commence loin :</b> baisers sur le ventre, l'intérieur des cuisses. Fais-la attendre.</li><li><b>Langue large et détendue</b> d'abord : de longs mouvements lents de bas en haut, sur toute la zone.</li><li><b>Puis précise :</b> pointe de la langue, petits mouvements autour du clitoris, à gauche, à droite, en cercles.</li><li><b>Trouve ce qui marche</b> et garde exactement le même rythme et la même pression. Ne t'arrête pas juste avant qu'elle jouisse.</li></ul>
+  <h4>Le geste qui fait la différence</h4><p>Combine : ta langue garde le rythme pendant qu'une main caresse ses seins ou son ventre, ou que deux doigts font le geste « viens ici » (module 1). La double stimulation multiplie l'intensité.</p>`},
+ {em:'💋',tag:'Module 5',t:'Les 5 secrets du sexe oral',s:'Pour qu\'elle perde le contrôle',
+  body:`<ol class="ol"><li><b>L'enthousiasme.</b> Elle doit sentir que tu aimes ça. Un homme qui « fait son devoir », elle le sent tout de suite.</li><li><b>La régularité bat la vitesse.</b> Un rythme constant pendant 2 minutes vaut mieux que 10 techniques différentes.</li><li><b>Écoute son bassin.</b> S'il monte vers toi, continue. S'il recule, tu es trop direct : adoucis.</li><li><b>Utilise tes lèvres.</b> Une légère succion douce et rythmée sur le clitoris, en alternance avec la langue.</li><li><b>Ne t'arrête pas au premier orgasme.</b> Ralentis, attends quelques secondes, puis reprends très doucement. Beaucoup de femmes peuvent enchaîner.</li></ol>`},
+ {em:'🗣️',tag:'Module 6',t:'Le murmure du plaisir',s:'Les mots et la respiration qui la font fondre',
+  body:`<p>Le cerveau est l'organe sexuel le plus puissant. Ta voix, grave et lente, contre son oreille, est une arme sous-estimée.</p>
+  <h4>La respiration</h4><p>Approche ta bouche à 2 cm de son oreille. Expire lentement, chaudement, avant de parler. Laisse-la sentir ton souffle sur son cou.</p>
+  <h4>La séquence de mots</h4><ol class="ol"><li><b>Le compliment :</b> « Tu es tellement belle ce soir. »</li><li><b>Le désir :</b> « Je pense à toi depuis ce matin. »</li><li><b>L'annonce :</b> « Je vais prendre mon temps avec toi. »</li><li><b>La question :</b> « Dis-moi ce que tu aimes. » Puis fais exactement ce qu'elle dit.</li><li><b>Pendant :</b> dis-lui ce que tu ressens et ce que tu aimes chez elle, en phrases courtes.</li></ol>
+  <div class="tip g small">Parle lentement, plus bas que ta voix normale. Moins de mots, plus de souffle.</div>`}
+];
+$('#tech-list').innerHTML=TECH.map((b,i)=>`<button class="item" data-t="${i}"><div class="em">${b.em}</div><div><span class="tag">${b.tag}</span><b>${b.t}</b><span>${b.s}</span></div><div class="chev">›</div></button>`).join('');
+$('#tech-list').addEventListener('click',e=>{const it=e.target.closest('[data-t]');if(!it)return;const b=TECH[+it.dataset.t];
+  openSheet(`<div class="kicker">${b.tag}</div><h2 class="gold">${b.em} ${b.t}</h2><p class="muted small">${b.s}</p>${b.body}`)});
+
+/* ---------- plan 21 jours ---------- */
+const TASKS=[
+  {k:'tonic',t:'Tonique au concombre',d:'Au réveil, à jeun'},
+  {k:'kegel',t:'Entraînement pelvien',d:'3 séries de 10 (minuteur ci-dessous)'},
+  {k:'walk',t:'30 minutes de marche rapide',d:'Ou vélo, natation, musculation'},
+  {k:'water',t:'Hydratation',d:'Ta quantité d\'eau du jour'},
+  {k:'sleep',t:'7 heures de sommeil',d:'Écrans coupés 30 min avant'},
+  {k:'clean',t:'Zéro excès',d:'Pas plus d\'1 verre d\'alcool, pas de tabac'}
+];
+const PHASES=[
+  {n:'Semaine 1 · Le nettoyage',d:'Installe la routine. Le plus dur est de commencer : prépare ton tonique chaque matin sans exception.'},
+  {n:'Semaine 2 · La circulation',d:'Ajoute le smoothie à la betterave avant ton sport, 2 à 3 fois cette semaine. Lis le module 2.'},
+  {n:'Semaine 3 · La puissance',d:'Passe à 3 séries de 15 contractions pelviennes. Mets en pratique les modules 1 et 6.'}
+];
+let plan=store.get('plan',{days:{}});
+let sel=null;
+function doneDay(d){const x=plan.days[d];return x&&TASKS.every(t=>x[t.k])}
+function currentDay(){for(let d=1;d<=21;d++)if(!doneDay(d))return d;return 21}
+function countDone(){let n=0;for(let d=1;d<=21;d++)if(doneDay(d))n++;return n}
+function renderPlan(){
+  const cur=currentDay(); if(sel===null)sel=cur;
+  const n=countDone();
+  $('#p-day').textContent=sel;$('#p-count').textContent=n;$('#p-bar').style.width=(n/21*100)+'%';
+  $('#days').innerHTML=Array.from({length:21},(_,i)=>{const d=i+1;return `<button class="day${doneDay(d)?' done':''}${d===sel?' sel':''}" data-d="${d}">${d}</button>`}).join('');
+  const ph=PHASES[Math.min(2,Math.floor((sel-1)/7))];
+  $('#p-phase').innerHTML=`<b>${ph.n}</b><br>${ph.d}`;
+  const x=plan.days[sel]||{};
+  $('#checks').innerHTML=TASKS.map(t=>`<label class="check"><input type="checkbox" data-k="${t.k}" ${x[t.k]?'checked':''}><div><b>${t.t}</b><small>${t.d}</small></div></label>`).join('');
+}
+$('#days').addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(!b)return;sel=+b.dataset.d;renderPlan()});
+$('#checks').addEventListener('change',e=>{const c=e.target.closest('[data-k]');if(!c)return;
+  plan.days[sel]=plan.days[sel]||{};plan.days[sel][c.dataset.k]=c.checked;store.set('plan',plan);
+  const wasSel=sel; if(doneDay(wasSel)&&wasSel<21){setTimeout(()=>{sel=currentDay();renderPlan()},500)}
+  renderPlan();renderHome()});
+
+/* ---------- kegel timer ---------- */
+let kRun=null;
+$('#kegel').addEventListener('click',()=>{
+  const btn=$('#kegel'),orb=$('#orb');
+  if(kRun){clearInterval(kRun);kRun=null;orb.classList.remove('c');$('#orb-n').textContent='5';$('#orb-t').textContent='Prêt';$('#orb-rep').textContent='Série : 10 répétitions · 5 s contraction / 5 s relâchement';btn.textContent='▶ Démarrer la série';return}
+  let rep=1,phase='c',sec=5;btn.textContent='■ Arrêter';
+  const paint=()=>{orb.classList.toggle('c',phase==='c');$('#orb-n').textContent=sec;$('#orb-t').textContent=phase==='c'?'Contracte':'Relâche';$('#orb-rep').textContent='Répétition '+rep+' / 10'};
+  paint();
+  kRun=setInterval(()=>{sec--;
+    if(sec===0){
+      if(phase==='c'){phase='r';sec=5}
+      else{rep++;if(rep>10){clearInterval(kRun);kRun=null;orb.classList.remove('c');$('#orb-n').textContent='✓';$('#orb-t').textContent='Série terminée';$('#orb-rep').textContent='Bravo. Fais 3 séries dans la journée.';btn.textContent='▶ Nouvelle série';return}phase='c';sec=5}
+      try{navigator.vibrate&&navigator.vibrate(phase==='c'?120:40)}catch(e){}
+    }
+    paint()},1000);
+});
+
+/* ---------- home ---------- */
+function renderHello(){const p=store.get('profile',null);$('#hello').textContent=p?'Recette calibrée · '+p.age+' ans · '+p.w+' kg':'Bienvenue, guerrier.'}
+function renderHome(){const n=countDone(),started=Object.keys(plan.days).length>0;
+  $('#home-progress').hidden=!started;$('#hp-day').textContent=currentDay();$('#hp-bar').style.width=(n/21*100)+'%'}
+renderHello();renderHome();
+
+const start=(location.hash||'').slice(1);
+if(['recipe','bonus','tech','plan'].includes(start))go(start);
+
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
+})();
+</script>
+</body>
+</html>
